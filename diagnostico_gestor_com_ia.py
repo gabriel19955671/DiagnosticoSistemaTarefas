@@ -100,7 +100,7 @@ if arquivo:
 
     # Diagnóstico com IA
     st.markdown("---")
-    st.subheader("📌 Diagnóstico Automático com GPT-4")
+    st.subheader("📌 Diagnóstico Automático com gpt-4")
 
     if st.button("Gerar Diagnóstico com IA"):
         with st.spinner("Gerando análise com inteligência artificial..."):
