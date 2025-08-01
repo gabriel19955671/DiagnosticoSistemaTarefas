@@ -100,7 +100,7 @@ if arquivo:
 
     # Diagnóstico com IA
     st.markdown("---")
-    st.subheader("📌 Diagnóstico Automático com gpt-4")
+    st.subheader("📌 Diagnóstico Automático com IA")
 
     if st.button("Gerar Diagnóstico com IA"):
         with st.spinner("Gerando análise com inteligência artificial..."):
@@ -110,7 +110,7 @@ if arquivo:
             try:
                 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
                 resposta = client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "Você é um analista contábil especialista em produtividade."},
                         {"role": "user", "content": prompt}
