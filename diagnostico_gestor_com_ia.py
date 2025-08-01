@@ -16,8 +16,14 @@ def identificar_colunas(df):
         'nome_tarefa': ['tarefa', 'descrição', 'descricao', 'task name', 'tarefa - nome'],
         'cliente': ['cliente', 'nomecliente', 'client name', 'cliente - nome'],
         'responsavel': ['executor', 'assignee', 'responsável', 'tarefa - responsável'],
-        'data_prevista_conclusao': ['due date', 'prazofatal', 'data prevista', 'prazo', 'tarefa - data de vencimento (completa)'],
-        'data_real_conclusao': ['completion date', 'datafinalizacao', 'data de conclusão', 'tarefa - data de conclusão (completa)']
+        'data_prevista_conclusao': [
+            'due date', 'prazofatal', 'data prevista', 'prazo',
+            'tarefa - data de vencimento (completa)', 'tarefa - data de vencimento'
+        ],
+        'data_real_conclusao': [
+            'completion date', 'datafinalizacao', 'data de conclusão',
+            'tarefa - data de conclusão (completa)', 'tarefa - data de conclusão'
+        ]
     }
 
     for padrao, possiveis_nomes in colunas_padrao.items():
