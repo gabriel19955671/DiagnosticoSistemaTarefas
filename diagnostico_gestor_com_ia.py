@@ -108,8 +108,8 @@ if arquivo:
             resumo = df_analise[colunas_para_resumo].head(50).to_csv(index=False)
             prompt = f"""Você é um analista contábil. Avalie os dados a seguir e gere um diagnóstico sobre gargalos, atrasos e oportunidades de melhoria:\n{resumo}"""
             try:
-                openai.api_key = st.secrets["OPENAI_API_KEY"]
-                resposta = openai.ChatCompletion.create(
+                client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+                resposta = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "Você é um analista contábil especialista em produtividade."},
@@ -117,6 +117,6 @@ if arquivo:
                     ]
                 )
                 st.success("✅ Diagnóstico gerado com sucesso!")
-                st.markdown(resposta["choices"][0]["message"]["content"])
+                st.markdown(resposta.choices[0].message.content)
             except Exception as e:
                 st.error(f"Erro ao gerar diagnóstico com IA: {e}")
