@@ -12,19 +12,18 @@ def identificar_colunas(df):
     mapeamento = {}
 
     colunas_padrao = {
-        'id_tarefa': ['id', 'task id', 'processoid', 'tarefa - id'],
-        'nome_tarefa': ['tarefa', 'descrição', 'descricao', 'task name', 'tarefa - nome'],
+        'id_tarefa': ['id', 'task id', 'processoid', 'tarefa - id', 'tarefa - desconsiderada para sempre?'],
+        'nome_tarefa': ['tarefa', 'descrição', 'descricao', 'task name', 'tarefa - nome', 'tarefa - data de vencimento.mês'],
         'cliente': ['cliente', 'nomecliente', 'client name', 'cliente - nome'],
-        'responsavel': ['executor', 'assignee', 'responsável', 'tarefa - responsável'],
+        'responsavel': ['executor', 'assignee', 'responsável', 'tarefa - responsável', 'responsável - papel'],
         'data_prevista_conclusao': [
             'due date', 'prazofatal', 'data prevista', 'prazo',
             'tarefa - data de vencimento (completa)', 'tarefa - data de vencimento',
-            'tarefa - data de vencimento.dia', 'tarefa - data de vencimento.ano'
+            'tarefa - no prazo?'
         ],
         'data_real_conclusao': [
             'completion date', 'datafinalizacao', 'data de conclusão',
-            'tarefa - data de conclusão (completa)', 'tarefa - data de conclusão',
-            'tarefa - data de conclusão.dia', 'tarefa - data de conclusão.ano'
+            'tarefa - data de conclusão (completa)', 'tarefa - data de conclusão'
         ]
     }
 
@@ -49,10 +48,7 @@ def identificar_colunas(df):
     st.write("Colunas encontradas na planilha:", df.columns.tolist())
     st.write("Colunas mapeadas:", mapeamento)
 
-    if len(mapeamento) < len(colunas_padrao):
-        st.warning("⚠️ Algumas colunas esperadas não foram encontradas. Verifique sua planilha.")
-
-    return df.rename(columns=mapeamento)
+    return df.rename(columns=mapeamento), mapeamento
 
 # --- Funções Auxiliares ---
 def categorizar_tarefa(nome_tarefa):
@@ -67,15 +63,26 @@ def categorizar_tarefa(nome_tarefa):
         return 'Outros'
 
 def calcular_metricas(df):
-    df['data_prevista_conclusao'] = pd.to_datetime(df['data_prevista_conclusao'], errors='coerce')
-    df['data_real_conclusao'] = pd.to_datetime(df['data_real_conclusao'], errors='coerce')
+    if 'data_prevista_conclusao' in df.columns:
+        df['data_prevista_conclusao'] = pd.to_datetime(df['data_prevista_conclusao'], errors='coerce')
+    if 'data_real_conclusao' in df.columns:
+        df['data_real_conclusao'] = pd.to_datetime(df['data_real_conclusao'], errors='coerce')
     df['status_prazo'] = 'No Prazo'
-    df.loc[df['data_real_conclusao'] > df['data_prevista_conclusao'], 'status_prazo'] = 'Em Atraso'
-    df.loc[df['data_real_conclusao'].isna(), 'status_prazo'] = 'Pendente'
-    df['dias_de_atraso'] = (df['data_real_conclusao'] - df['data_prevista_conclusao']).dt.days
-    df.loc[df['dias_de_atraso'] < 0, 'dias_de_atraso'] = 0
-    df['tipo_tarefa'] = df['nome_tarefa'].apply(categorizar_tarefa)
-    df['mes_conclusao'] = df['data_real_conclusao'].dt.to_period('M').astype(str)
+    if 'data_real_conclusao' in df.columns and 'data_prevista_conclusao' in df.columns:
+        df.loc[df['data_real_conclusao'] > df['data_prevista_conclusao'], 'status_prazo'] = 'Em Atraso'
+        df.loc[df['data_real_conclusao'].isna(), 'status_prazo'] = 'Pendente'
+        df['dias_de_atraso'] = (df['data_real_conclusao'] - df['data_prevista_conclusao']).dt.days
+        df.loc[df['dias_de_atraso'] < 0, 'dias_de_atraso'] = 0
+    else:
+        df['dias_de_atraso'] = 0
+    if 'nome_tarefa' in df.columns:
+        df['tipo_tarefa'] = df['nome_tarefa'].apply(categorizar_tarefa)
+    else:
+        df['tipo_tarefa'] = 'Indefinido'
+    if 'data_real_conclusao' in df.columns:
+        df['mes_conclusao'] = df['data_real_conclusao'].dt.to_period('M').astype(str)
+    else:
+        df['mes_conclusao'] = 'Indefinido'
     return df
 
 # --- Início da Interface ---
@@ -85,33 +92,31 @@ arquivo = st.file_uploader("Envie uma planilha CSV ou Excel")
 
 if arquivo:
     df_bruto = pd.read_excel(arquivo) if arquivo.name.endswith(".xlsx") else pd.read_csv(arquivo)
-    df_bruto = identificar_colunas(df_bruto)
+    df_bruto, mapeamento = identificar_colunas(df_bruto)
 
-    if 'data_prevista_conclusao' in df_bruto.columns and 'data_real_conclusao' in df_bruto.columns:
-        df_analise = calcular_metricas(df_bruto)
-        st.success("✅ Dados processados com sucesso!")
-        st.dataframe(df_analise.head())
+    df_analise = calcular_metricas(df_bruto)
+    st.success("✅ Dados processados com sucesso!")
+    st.dataframe(df_analise.head())
 
-        # Diagnóstico com IA
-        st.markdown("---")
-        st.subheader("📌 Diagnóstico Automático com GPT-4")
+    # Diagnóstico com IA
+    st.markdown("---")
+    st.subheader("📌 Diagnóstico Automático com GPT-4")
 
-        if st.button("Gerar Diagnóstico com IA"):
-            with st.spinner("Gerando análise com inteligência artificial..."):
-                resumo = df_analise[['cliente', 'responsavel', 'status_prazo', 'tipo_tarefa', 'dias_de_atraso']].head(50).to_csv(index=False)
-                prompt = f"""Você é um analista contábil. Avalie os dados a seguir e gere um diagnóstico sobre gargalos, atrasos e oportunidades de melhoria:\n{resumo}"""
-                try:
-                    openai.api_key = st.secrets["OPENAI_API_KEY"]
-                    resposta = openai.ChatCompletion.create(
-                        model="gpt-4",
-                        messages=[
-                            {"role": "system", "content": "Você é um analista contábil especialista em produtividade."},
-                            {"role": "user", "content": prompt}
-                        ]
-                    )
-                    st.success("✅ Diagnóstico gerado com sucesso!")
-                    st.markdown(resposta["choices"][0]["message"]["content"])
-                except Exception as e:
-                    st.error(f"Erro ao gerar diagnóstico com IA: {e}")
-    else:
-        st.error("❌ Não foi possível identificar as colunas essenciais na planilha.")
+    if st.button("Gerar Diagnóstico com IA"):
+        with st.spinner("Gerando análise com inteligência artificial..."):
+            colunas_para_resumo = [col for col in ['cliente', 'responsavel', 'status_prazo', 'tipo_tarefa', 'dias_de_atraso'] if col in df_analise.columns]
+            resumo = df_analise[colunas_para_resumo].head(50).to_csv(index=False)
+            prompt = f"""Você é um analista contábil. Avalie os dados a seguir e gere um diagnóstico sobre gargalos, atrasos e oportunidades de melhoria:\n{resumo}"""
+            try:
+                openai.api_key = st.secrets["OPENAI_API_KEY"]
+                resposta = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "Você é um analista contábil especialista em produtividade."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                st.success("✅ Diagnóstico gerado com sucesso!")
+                st.markdown(resposta["choices"][0]["message"]["content"])
+            except Exception as e:
+                st.error(f"Erro ao gerar diagnóstico com IA: {e}")
