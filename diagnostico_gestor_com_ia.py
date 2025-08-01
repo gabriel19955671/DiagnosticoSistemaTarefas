@@ -37,10 +37,20 @@ def identificar_colunas(df):
             if padrao in mapeamento:
                 break
 
+    if 'data_prevista_conclusao' not in mapeamento and 'tarefa - data de vencimento.ano' in df.columns and 'tarefa - data de vencimento.dia' in df.columns:
+        df['data_prevista_conclusao'] = pd.to_datetime(df['tarefa - data de vencimento.ano'].astype(str) + '-' + df['tarefa - data de vencimento.mês'].astype(str) + '-' + df['tarefa - data de vencimento.dia'].astype(str), errors='coerce')
+        mapeamento['data_prevista_conclusao'] = 'data_prevista_conclusao'
+
+    if 'data_real_conclusao' not in mapeamento and 'tarefa - data de conclusão.ano' in df.columns and 'tarefa - data de conclusão.dia' in df.columns:
+        df['data_real_conclusao'] = pd.to_datetime(df['tarefa - data de conclusão.ano'].astype(str) + '-' + df['tarefa - data de conclusão.mês'].astype(str) + '-' + df['tarefa - data de conclusão.dia'].astype(str), errors='coerce')
+        mapeamento['data_real_conclusao'] = 'data_real_conclusao'
+
+    st.subheader("🔍 Log de mapeamento de colunas")
+    st.write("Colunas encontradas na planilha:", df.columns.tolist())
+    st.write("Colunas mapeadas:", mapeamento)
+
     if len(mapeamento) < len(colunas_padrao):
         st.warning("⚠️ Algumas colunas esperadas não foram encontradas. Verifique sua planilha.")
-        st.write("Colunas encontradas:", df.columns.tolist())
-        st.write("Mapeamento parcial:", mapeamento)
 
     return df.rename(columns=mapeamento)
 
