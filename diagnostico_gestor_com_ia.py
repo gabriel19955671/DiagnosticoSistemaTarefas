@@ -18,11 +18,13 @@ def identificar_colunas(df):
         'responsavel': ['executor', 'assignee', 'responsável', 'tarefa - responsável'],
         'data_prevista_conclusao': [
             'due date', 'prazofatal', 'data prevista', 'prazo',
-            'tarefa - data de vencimento (completa)', 'tarefa - data de vencimento'
+            'tarefa - data de vencimento (completa)', 'tarefa - data de vencimento',
+            'tarefa - data de vencimento.dia', 'tarefa - data de vencimento.ano'
         ],
         'data_real_conclusao': [
             'completion date', 'datafinalizacao', 'data de conclusão',
-            'tarefa - data de conclusão (completa)', 'tarefa - data de conclusão'
+            'tarefa - data de conclusão (completa)', 'tarefa - data de conclusão',
+            'tarefa - data de conclusão.dia', 'tarefa - data de conclusão.ano'
         ]
     }
 
