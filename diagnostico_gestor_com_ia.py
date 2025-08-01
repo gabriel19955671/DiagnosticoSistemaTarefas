@@ -12,12 +12,12 @@ def identificar_colunas(df):
     mapeamento = {}
 
     colunas_padrao = {
-        'id_tarefa': ['id', 'task id', 'processoid'],
-        'nome_tarefa': ['tarefa', 'descrição', 'descricao', 'task name'],
-        'cliente': ['cliente', 'nomecliente', 'client name'],
-        'responsavel': ['executor', 'assignee', 'responsável'],
-        'data_prevista_conclusao': ['due date', 'prazofatal', 'data prevista', 'prazo'],
-        'data_real_conclusao': ['completion date', 'datafinalizacao', 'data de conclusão']
+        'id_tarefa': ['id', 'task id', 'processoid', 'tarefa - id'],
+        'nome_tarefa': ['tarefa', 'descrição', 'descricao', 'task name', 'tarefa - nome'],
+        'cliente': ['cliente', 'nomecliente', 'client name', 'cliente - nome'],
+        'responsavel': ['executor', 'assignee', 'responsável', 'tarefa - responsável'],
+        'data_prevista_conclusao': ['due date', 'prazofatal', 'data prevista', 'prazo', 'tarefa - data de vencimento (completa)'],
+        'data_real_conclusao': ['completion date', 'datafinalizacao', 'data de conclusão', 'tarefa - data de conclusão (completa)']
     }
 
     for padrao, possiveis_nomes in colunas_padrao.items():
